@@ -347,7 +347,7 @@ class Boxes:
             self.set_source_color(Color.BLUE)
         else:
             self.ctx.set_line_width(max(2 * self.burn, 0.05))
-            self.set_source_color(Color.BLACK)
+            self.set_source_color(Color.BLUE)
 
         self.spacing = 2 * self.burn + 0.5 * self.thickness
         self.set_font("sans-serif")
@@ -1138,7 +1138,7 @@ class Boxes:
             self.ctx.restore()
             if self.labels:
                 self.text(label, x/2, y/2, align="middle center", color=Color.ANNOTATIONS, fontsize=4)
-            self.ctx.stroke() 
+            self.ctx.stroke()
 
         for term in terms:
             if not term in moves:
@@ -1870,7 +1870,7 @@ class Boxes:
         :param r: radius of the corners of the flange
         :param callback:  (Default value = None)
         :param move:  (Default value = None)
-        :param label: rendered to identify parts, it is not ment to be cut or etched (Default value = "")        
+        :param label: rendered to identify parts, it is not ment to be cut or etched (Default value = "")
         """
 
         t = self.thickness
@@ -1927,7 +1927,7 @@ class Boxes:
         :param bedBoltSettings:  (Default value = None)
         :param callback:  (Default value = None)
         :param move:  (Default value = None)
-        :param label: rendered to identify parts, it is not ment to be cut or etched (Default value = "")    
+        :param label: rendered to identify parts, it is not ment to be cut or etched (Default value = "")
         """
         edges = [self.edges.get(e, e) for e in edges]
         if len(edges) == 2:
