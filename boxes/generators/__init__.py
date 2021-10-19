@@ -29,6 +29,7 @@ class UIGroup:
         return self._image and f"{self._image}.jpg"
 
 ui_groups = [
+    UIGroup("Snijlab", "Snijlab templates", image="UniversalBox"),
     UIGroup("Box", "Boxes", image="UniversalBox"),
     UIGroup("FlexBox", "Boxes with flex", image="RoundedBox"),
     UIGroup("Tray", "Trays and Drawer Inserts", image="TypeTray"),
