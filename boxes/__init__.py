@@ -296,7 +296,7 @@ class Boxes:
             "--labels", action="store", type=boolarg, default=True,
             help="label the parts (where available)")
         defaultgroup.add_argument(
-            "--reference", action="store", type=float, default=100,
+            "--reference", action="store", type=float, default=0,
             help="print reference rectangle with given length (zero to disable)")
         defaultgroup.add_argument(
             "--burn", action="store", type=float, default=0.1,
