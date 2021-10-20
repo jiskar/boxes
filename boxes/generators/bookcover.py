@@ -27,15 +27,14 @@ class BookCover(Boxes):
         self.addSettingsArgs(edges.FlexSettings)
         self.buildArgParser()
         self.argparser.add_argument(
-            "--radius", action="store", type=float, default=10,
-            help="Radius of the corners in mm")
+            "--width", action="store", type=int, default=102,
+            help="the width of the (closed) cover")
         self.argparser.add_argument(
             "--height", action="store", type=int, default=144,
             help="the height of the cover")
         self.argparser.add_argument(
-            "--width", action="store", type=int, default=102,
-            help="the width of the (closed) cover")
-
+            "--radius", action="store", type=float, default=10,
+            help="Radius of the corners in mm")
 
 
     def render(self):
@@ -43,22 +42,24 @@ class BookCover(Boxes):
 
         hinge_width = 30
 
-        # side 1
+        # Booklet is generated 90 degrees rotated to align woodfibers with flex
+
+        # Right of booklet, bottom in drawing
         self.edge(self.height - 2 * self.radius)
         self.corner(90, self.radius)
 
-        # Bottom
+        # Top of booklet, right in drawing
         self.edge(self.width - self.radius)
         self.edges["X"](hinge_width, self.height)  # hinge
         self.edge(self.width - self.radius)
         self.corner(90, self.radius)
 
-        # side 2
+        # Left of booklet, top in drawing
         self.edge(self.height - 2 * self.radius)
 
         self.corner(90, self.radius)
 
-        # Top
+        # Bottom of booklet, left in drawing
         self.edge(self.width - self.radius)
         self.edge(hinge_width)
         self.edge(self.width - self.radius)
