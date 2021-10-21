@@ -35,6 +35,7 @@ class BookCover(Boxes):
         self.argparser.add_argument(
             "--radius", action="store", type=float, default=10,
             help="Radius of the corners in mm")
+        self.argparser.add_argument("--rotated", action="store", type=boolarg, default=False)
 
 
     def render(self):
@@ -42,26 +43,49 @@ class BookCover(Boxes):
 
         hinge_width = 30
 
-        # Booklet is generated 90 degrees rotated to align woodfibers with flex
+        if self.rotated:
+            # Booklet is generated 90 degrees rotated to align woodfibers with flex
+            # Right of booklet, bottom in drawing
+            self.edge(self.height - 2 * self.radius)
+            self.corner(90, self.radius)
 
-        # Right of booklet, bottom in drawing
-        self.edge(self.height - 2 * self.radius)
-        self.corner(90, self.radius)
+            # Top of booklet, right in drawing
+            self.edge(self.width - self.radius)
+            self.edges["X"](hinge_width, self.height)  # hinge
+            self.edge(self.width - self.radius)
+            self.corner(90, self.radius)
 
-        # Top of booklet, right in drawing
-        self.edge(self.width - self.radius)
-        self.edges["X"](hinge_width, self.height)  # hinge
-        self.edge(self.width - self.radius)
-        self.corner(90, self.radius)
+            # Left of booklet, top in drawing
+            self.edge(self.height - 2 * self.radius)
 
-        # Left of booklet, top in drawing
-        self.edge(self.height - 2 * self.radius)
+            self.corner(90, self.radius)
 
-        self.corner(90, self.radius)
+            # Bottom of booklet, left in drawing
+            self.edge(self.width - self.radius)
+            self.edge(hinge_width)
+            self.edge(self.width - self.radius)
 
-        # Bottom of booklet, left in drawing
-        self.edge(self.width - self.radius)
-        self.edge(hinge_width)
-        self.edge(self.width - self.radius)
+            self.corner(90, self.radius)
 
-        self.corner(90, self.radius)
+        else:
+            # Bottom of booklet
+            self.edge(self.width - self.radius)
+            self.edges["X"](hinge_width, self.height)  # hinge
+            self.edge(self.width - self.radius)
+            self.corner(90, self.radius)
+
+            # Right of booklet, bottom in drawing
+            self.edge(self.height - 2 * self.radius)
+            self.corner(90, self.radius)
+
+            # Top of booklet, right in drawing
+            self.edge(self.width - self.radius)
+            self.edge(hinge_width)
+            self.edge(self.width - self.radius)
+            self.corner(90, self.radius)
+
+            # Left of booklet, top in drawing
+            self.edge(self.height - 2 * self.radius)
+            self.corner(90, self.radius)
+
+
