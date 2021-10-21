@@ -43,6 +43,9 @@ class BookCover(Boxes):
 
         hinge_width = 30
 
+        # prevent corner radius from getting too big:
+        self.radius = min(self.radius, self.width, self.height / 2)
+
         if self.rotated:
             # Booklet is generated 90 degrees rotated to align woodfibers with flex
             # Right of booklet, bottom in drawing
