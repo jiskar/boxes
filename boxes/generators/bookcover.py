@@ -35,13 +35,17 @@ class BookCover(Boxes):
         self.argparser.add_argument(
             "--radius", action="store", type=float, default=10,
             help="Radius of the corners in mm")
+        self.argparser.add_argument(
+            "--closedThickness", action="store", type=float, default=9,
+            help="Thickness of the closed cover (approximately)")
         self.argparser.add_argument("--rotated", action="store", type=boolarg, default=False)
 
 
     def render(self):
         self.moveTo(self.radius, 0)
 
-        hinge_width = 30
+        # calculate hinge_width from thickness when closed (assuming it will form like a half circle)
+        hinge_width = 0.5 * math.pi * ( self.closedThickness / 2 ) ** 2
 
         # prevent corner radius from getting too big:
         self.radius = min(self.radius, self.width, self.height / 2)
