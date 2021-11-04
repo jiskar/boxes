@@ -33,6 +33,7 @@ from urllib.parse import parse_qs
 from wsgiref.util import setup_testing_defaults
 from wsgiref.simple_server import make_server
 import wsgiref.util
+from cors_whitelist import cors_whitelist
 
 try:
     import boxes.generators
@@ -451,6 +452,8 @@ class BServer:
 
         status = '200 OK'
         headers = [('Content-type', 'text/html; charset=utf-8'), ('X-XSS-Protection', '1; mode=block'), ('X-Content-Type-Options', 'nosniff'), ('x-frame-options', 'SAMEORIGIN'), ('Referrer-Policy', 'no-referrer')]
+        for host in cors_whitelist:
+            headers.append(('Access-Control-Allow-Origin', host))
 
         d = parse_qs(environ.get('QUERY_STRING', ''))
         name = environ["PATH_INFO"][1:]
