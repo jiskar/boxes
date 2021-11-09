@@ -526,6 +526,10 @@ class BServer:
                 if extension == "svg_Ponoko":
                     extension = "svg"
                 http_headers.append(('Content-Disposition', 'attachment; filename="%s.%s"' % (box.__class__.__name__, extension)))
+
+            for host in cors_whitelist:
+                http_headers.append(('Access-Control-Allow-Origin', host))
+
             start_response(status, http_headers)
             result = open(box.output, 'rb').readlines()
             os.close(fd)
