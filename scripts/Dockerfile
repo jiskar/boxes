@@ -13,6 +13,11 @@
 # Use latest Fedora release as base
 FROM fedora:latest
 
+# fix from https://medium.com/nttlabs/ubuntu-21-10-and-fedora-35-do-not-work-on-docker-20-10-9-1cd439d9921
+ADD https://github.com/AkihiroSuda/clone3-workaround/releases/download/v1.0.0/clone3-workaround.x86_64 /clone3-workaround
+RUN chmod 755 /clone3-workaround
+SHELL ["/clone3-workaround", "/bin/sh", "-c"]
+
 # Install requirements
 RUN dnf install -y git-core python3-markdown python3-setuptools python3-affine pstoedit && dnf clean all
 
