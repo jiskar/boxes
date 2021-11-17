@@ -44,6 +44,25 @@ class BookCover(Boxes):
     def render(self):
         self.moveTo(self.radius, 0)
 
+        # self.flexSettings = (3, 5.0, 20.0)
+
+
+        self.FlexSettings = (1, 1, 1)
+
+        print(f"flex settings: {self.FlexSettings}")
+
+        # relative_params = {
+        # "distance": 0.5,
+        # "connection": 1.0,
+        # "width": 5.0,
+        # }
+
+        # absolute_params = {
+        #     "stretch": 1.05,
+        # }
+
+
+
         # calculate hinge_width from thickness when closed (assuming it will form like a half circle)
         hinge_width = 0.5 * math.pi * ( self.closedThickness / 2 ) ** 2
 

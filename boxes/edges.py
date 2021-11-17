@@ -2035,20 +2035,20 @@ Values:
 
 """
     relative_params = {
-        "distance": 0.5,
-        "connection": 1.0,
-        "width": 5.0,
+        "cellWidth": 1,  # cel width
+        "tabLength": 1,  # tab length
     }
 
     absolute_params = {
         "stretch": 1.05,
+        "cellsPerRow": 5
     }
 
     def checkValues(self):
-        if self.distance < 0.01:
+        if self.cellWidth < 1:
             raise ValueError("Flex Settings: distance parameter must be > 0.01mm")
-        if self.width < 0.1:
-            raise ValueError("Flex Settings: width parameter must be > 0.1mm")
+        if 3 > self.cellsPerRow > 20:
+            raise ValueError("Flex Settings: cells per row must be >= 3  and <= 20")
 
 class FlexEdge(BaseEdge):
     """Edge with flex cuts - use straight edge for the opposing side"""
@@ -2056,48 +2056,53 @@ class FlexEdge(BaseEdge):
     description = "Flex cut"
 
     def __call__(self, x, h, **kw):
-        dist = self.settings.distance
-        connection = self.settings.connection
-        width = self.settings.width
+        total_height = x
+        total_width = h
+        cell_width = self.settings.cellWidth  # 'dist'
+        tab_length = self.settings.tabLength  # tab
+        cells_per_row = self.settings.cellsPerRow  # lengte
+        print(f"in FlexEdge. total_height: {round(total_height, 2)}, total_width: {total_width}, cell_width: {cell_width}, tab_length: {tab_length}, cells_per_row: {cells_per_row}")
 
         burn = self.boxes.burn
         h += 2 * burn
-        lines = int(x // dist)
-        leftover = x - lines * dist
-        sections = max(int((h - connection) // width), 1)
-        sheight = ((h - connection) / sections) - connection
+        lines = int(x // cell_width)  # aantal regels
+        leftover = x - lines * cell_width
+        # cells_per_row = max(int((h - tab_length) // cell_length), 1)  # kolommen
+        sheight = ((h - tab_length) / cells_per_row) - tab_length
+
+        print(f"in FlexEdge. lines: {lines}, leftover: {leftover}, cells_per_row: {cells_per_row}, sheight: {sheight}")
 
         self.ctx.stroke()
         for i in range(1, lines):
-            pos = i * dist + leftover / 2
+            pos = i * cell_width + leftover / 2
 
             if i % 2:
                 self.ctx.move_to(pos, 0)
-                self.ctx.line_to(pos, connection + sheight)
+                self.ctx.line_to(pos, tab_length + sheight)
 
-                for j in range((sections - 1) // 2):
-                    self.ctx.move_to(pos, (2 * j + 1) * sheight + (2 * j + 2) * connection)
-                    self.ctx.line_to(pos, (2 * j + 3) * (sheight + connection))
+                for j in range((cells_per_row - 1) // 2):
+                    self.ctx.move_to(pos, (2 * j + 1) * sheight + (2 * j + 2) * tab_length)
+                    self.ctx.line_to(pos, (2 * j + 3) * (sheight + tab_length))
 
-                if not sections % 2:
-                    self.ctx.move_to(pos, h - sheight - connection)
+                if not cells_per_row % 2:
+                    self.ctx.move_to(pos, h - sheight - tab_length)
                     self.ctx.line_to(pos, h)
             else:
-                if sections % 2:
+                if cells_per_row % 2:
                     self.ctx.move_to(pos, h)
-                    self.ctx.line_to(pos, h - connection - sheight)
+                    self.ctx.line_to(pos, h - tab_length - sheight)
 
-                    for j in range((sections - 1) // 2):
+                    for j in range((cells_per_row - 1) // 2):
                         self.ctx.move_to(
-                            pos, h - ((2 * j + 1) * sheight + (2 * j + 2) * connection))
+                            pos, h - ((2 * j + 1) * sheight + (2 * j + 2) * tab_length))
                         self.ctx.line_to(
-                            pos, h - (2 * j + 3) * (sheight + connection))
+                            pos, h - (2 * j + 3) * (sheight + tab_length))
 
                 else:
-                    for j in range(sections // 2):
+                    for j in range(cells_per_row // 2):
                         self.ctx.move_to(pos,
-                                         h - connection - 2 * j * (sheight + connection))
-                        self.ctx.line_to(pos, h - 2 * (j + 1) * (sheight + connection))
+                                         h - tab_length - 2 * j * (sheight + tab_length))
+                        self.ctx.line_to(pos, h - 2 * (j + 1) * (sheight + tab_length))
 
         self.ctx.stroke()
         self.ctx.move_to(0, 0)
