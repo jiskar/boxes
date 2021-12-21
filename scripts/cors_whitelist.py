@@ -2,5 +2,5 @@
 
 cors_whitelist = [
   # "*.example.com"
-  "*.snijlab.nl"
+  "*"
 ]
