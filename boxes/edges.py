@@ -2035,20 +2035,19 @@ Values:
 
 """
     relative_params = {
-        "cellWidth": 1,  # cel width
-        "tabLength": 1,  # tab length
     }
 
     absolute_params = {
-        "stretch": 1.05,
-        "cellsPerRow": 5
+        "connectingPoints": 3,
+        "flexibility": 13,  #
     }
 
     def checkValues(self):
-        if self.cellWidth < 1:
-            raise ValueError("Flex Settings: distance parameter must be > 0.01mm")
-        if 3 > self.cellsPerRow > 20:
-            raise ValueError("Flex Settings: cells per row must be >= 3  and <= 20")
+        if 20 < self.flexibility < 1:
+            raise ValueError("flexibility must be between 1 and 20")
+        if 10 < self.connectingPoints < 1:
+            raise ValueError("number of connecting points must be between 1 and 10")
+
 
 class FlexEdge(BaseEdge):
     """Edge with flex cuts - use straight edge for the opposing side"""
@@ -2056,53 +2055,49 @@ class FlexEdge(BaseEdge):
     description = "Flex cut"
 
     def __call__(self, x, h, **kw):
+        cells_per_row = self.settings.connectingPoints * 2 - 1   # number of cells should always be an odd number
+        # the number of cells per row should always be odd,
+        # otherwise the number of connecting points are different between odd and even rows
+        # which introduces weak spots.
         total_height = x
-        total_width = h
-        cell_width = self.settings.cellWidth  # 'dist'
-        tab_length = self.settings.tabLength  # tab
-        cells_per_row = self.settings.cellsPerRow  # lengte
-        print(f"in FlexEdge. total_height: {round(total_height, 2)}, total_width: {total_width}, cell_width: {cell_width}, tab_length: {tab_length}, cells_per_row: {cells_per_row}")
+        total_length = h + 2 * self.boxes.burn  # apply kerf correction
+        tab_length = self.settings.thickness / 2  # tab
+        flexibility = self.settings.flexibility
+        cell_length = (total_length - tab_length) / cells_per_row  # subtraction of one tab_length is to make the ends prettier
+        flex_length = cell_length - 2 * tab_length  # length of the flexible part of a cell
+        number_of_rows = round(total_height/(flex_length/flexibility))
+        row_height = total_height / number_of_rows
 
-        burn = self.boxes.burn
-        h += 2 * burn
-        lines = int(x // cell_width)  # aantal regels
-        leftover = x - lines * cell_width
-        # cells_per_row = max(int((h - tab_length) // cell_length), 1)  # kolommen
-        sheight = ((h - tab_length) / cells_per_row) - tab_length
-
-        print(f"in FlexEdge. lines: {lines}, leftover: {leftover}, cells_per_row: {cells_per_row}, sheight: {sheight}")
+        # print(f"in FlexEdge.\n"
+        #     f"total_height: {total_height:.2f}\n"
+        #     f"total_length: {total_length}\n"
+        #     f"tab_length: {tab_length}\n"
+        #     f"flex_length: {flex_length:.2f}\n"
+        #     f"number_of_rows: {number_of_rows}\n"
+        #     f"cells_per_row: {cells_per_row}\n")
 
         self.ctx.stroke()
-        for i in range(1, lines):
-            pos = i * cell_width + leftover / 2
+        for i in range(1, number_of_rows):
+            current_height = i * row_height
 
-            if i % 2:
-                self.ctx.move_to(pos, 0)
-                self.ctx.line_to(pos, tab_length + sheight)
+            if i % 2:  # odd cuts
+                self.ctx.move_to(current_height, 0)  # start at zero
+                self.ctx.line_to(current_height, cell_length - tab_length)  # first cut, starting from edge
 
                 for j in range((cells_per_row - 1) // 2):
-                    self.ctx.move_to(pos, (2 * j + 1) * sheight + (2 * j + 2) * tab_length)
-                    self.ctx.line_to(pos, (2 * j + 3) * (sheight + tab_length))
+                    self.ctx.move_to(current_height, (2 * j + 1) * cell_length + tab_length)  # start cut
+                    self.ctx.line_to(current_height, (2 * j + 3) * cell_length - tab_length)  # end of cut
 
-                if not cells_per_row % 2:
-                    self.ctx.move_to(pos, h - sheight - tab_length)
-                    self.ctx.line_to(pos, h)
-            else:
-                if cells_per_row % 2:
-                    self.ctx.move_to(pos, h)
-                    self.ctx.line_to(pos, h - tab_length - sheight)
+            else:  # even cuts
+                self.ctx.move_to(current_height, total_length)  # move to end
+                self.ctx.line_to(current_height, total_length - cell_length + tab_length)
 
-                    for j in range((cells_per_row - 1) // 2):
-                        self.ctx.move_to(
-                            pos, h - ((2 * j + 1) * sheight + (2 * j + 2) * tab_length))
-                        self.ctx.line_to(
-                            pos, h - (2 * j + 3) * (sheight + tab_length))
+                for j in range((cells_per_row - 1) // 2):
+                    self.ctx.move_to(
+                        current_height, total_length - ((2 * j + 1) * cell_length + tab_length))
+                    self.ctx.line_to(
+                        current_height, total_length - (2 * j + 3) * cell_length + tab_length)
 
-                else:
-                    for j in range(cells_per_row // 2):
-                        self.ctx.move_to(pos,
-                                         h - tab_length - 2 * j * (sheight + tab_length))
-                        self.ctx.line_to(pos, h - 2 * (j + 1) * (sheight + tab_length))
 
         self.ctx.stroke()
         self.ctx.move_to(0, 0)
