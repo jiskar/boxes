@@ -2039,12 +2039,11 @@ Values:
 
     absolute_params = {
         "connectingPoints": 3,
-        "flexibility": 13,  #
+        "modulus_of_rigidity": 0.3,  # Gpa
+        "max_rotation": 180,  # degrees
     }
 
     def checkValues(self):
-        if 20 < self.flexibility < 1:
-            raise ValueError("flexibility must be between 1 and 20")
         if 10 < self.connectingPoints < 1:
             raise ValueError("number of connecting points must be between 1 and 10")
 
@@ -2054,27 +2053,46 @@ class FlexEdge(BaseEdge):
     char = 'X'
     description = "Flex cut"
 
-    def __call__(self, x, h, **kw):
+    def sninge_torque(self, num_of_rows, total_width, flex_length, thickness, total_rotation, cells_per_row, G):
+        """ returns the torque of a sninge in Nmm based on it's geometry and material """
+        cell_width = total_width / num_of_rows;
+        a = max(cell_width, thickness) / 2;
+        b = min(cell_width, thickness) / 2;
+        K = a * math.pow(b,3) * ((16/3) - 3.36 * (b/a) * (1- (math.pow(b,4)/(12*math.pow(a,4))) ));
+        rotation = total_rotation / num_of_rows;
+        cell_torque = ( G * math.radians(rotation) * K ) / flex_length;
+        total_torque = cells_per_row * cell_torque * 1000;
+        return total_torque
+
+    def get_number_of_rows(self, desired_torque, total_width, flex_length, thickness, total_rotation, cells_per_row, G):
+        """find the number of rows that approximately gives the desired torque"""
+        for i in range(1,40):
+            new_torque = self.sninge_torque(i, total_width, flex_length, thickness, total_rotation, cells_per_row, G)
+            if new_torque < desired_torque:
+                return i
+        raise ValueError("no solution found for this sninge")
+
+    def __call__(self, x, h, torque, **kw):
         cells_per_row = self.settings.connectingPoints * 2 - 1   # number of cells should always be an odd number
         # the number of cells per row should always be odd,
         # otherwise the number of connecting points are different between odd and even rows
         # which introduces weak spots.
-        total_height = x
+        total_width = x
         total_length = h + 2 * self.boxes.burn  # apply kerf correction
         tab_length = self.settings.thickness / 2  # tab
-        flexibility = self.settings.flexibility
         cell_length = (total_length - tab_length) / cells_per_row  # subtraction of one tab_length is to make the ends prettier
         flex_length = cell_length - 2 * tab_length  # length of the flexible part of a cell
-        number_of_rows = round(total_height/(flex_length/flexibility))
-        row_height = total_height / number_of_rows
+        number_of_rows = self.get_number_of_rows(torque, total_width, flex_length, self.settings.thickness, self.settings.max_rotation, cells_per_row, self.settings.modulus_of_rigidity)
+        row_height = total_width / number_of_rows
 
         # print(f"in FlexEdge.\n"
-        #     f"total_height: {total_height:.2f}\n"
+        #     f"total_width: {total_width:.2f}\n"
         #     f"total_length: {total_length}\n"
         #     f"tab_length: {tab_length}\n"
         #     f"flex_length: {flex_length:.2f}\n"
-        #     f"number_of_rows: {number_of_rows}\n"
+            # f"number_of_rows: {number_of_rows}\n"
         #     f"cells_per_row: {cells_per_row}\n")
+            # f"torque: {torque}\n")
 
         self.ctx.stroke()
         for i in range(1, number_of_rows):

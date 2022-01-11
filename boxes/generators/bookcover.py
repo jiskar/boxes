@@ -36,35 +36,27 @@ class BookCover(Boxes):
             "--radius", action="store", type=float, default=10,
             help="Radius of the corners in mm")
         self.argparser.add_argument(
-            "--closedThickness", action="store", type=float, default=9,
+            "--thickness_when_closed", action="store", type=float, default=19,
             help="Thickness of the closed cover (approximately)")
+        self.argparser.add_argument(
+            "--density", action="store", type=float, default=670,
+            help="Density of the material in kg/m³")
+        self.argparser.add_argument(
+            "--torque_factor", action="store", type=float, default=4,
+            help="ratio of sninge torque to cover torque")
         self.argparser.add_argument("--rotated", action="store", type=boolarg, default=False)
 
 
     def render(self):
         self.moveTo(self.radius, 0)
 
-        # self.flexSettings = (3, 5.0, 20.0)
-
-
-        self.FlexSettings = (1, 1, 1)
-
-        print(f"flex settings: {self.FlexSettings}")
-
-        # relative_params = {
-        # "distance": 0.5,
-        # "connection": 1.0,
-        # "width": 5.0,
-        # }
-
-        # absolute_params = {
-        #     "stretch": 1.05,
-        # }
-
-
+        # calculate the torque that the cover applies on the sninge when lying flat:
+        cover_weight = self.density * self.width * self.height * self.thickness * 1e-9  # in kg
+        cover_torque = 0.5 * self.width * cover_weight * 9.81
+        sninge_torque = self.torque_factor * cover_torque
 
         # calculate hinge_width from thickness when closed (assuming it will form like a half circle)
-        hinge_width = 0.5 * math.pi * ( self.closedThickness / 2 ) ** 2
+        hinge_width = math.pi * ( self.thickness_when_closed / 2 )
 
         # prevent corner radius from getting too big:
         self.radius = min(self.radius, self.width, self.height / 2)
@@ -77,7 +69,7 @@ class BookCover(Boxes):
 
             # Top of booklet, right in drawing
             self.edge(self.width - self.radius)
-            self.edges["X"](hinge_width, self.height)  # hinge
+            self.edges["X"](hinge_width, self.height, torque=sninge_torque)  # hinge
             self.edge(self.width - self.radius)
             self.corner(90, self.radius)
 
@@ -96,7 +88,7 @@ class BookCover(Boxes):
         else:
             # Bottom of booklet
             self.edge(self.width - self.radius)
-            self.edges["X"](hinge_width, self.height)  # hinge
+            self.edges["X"](hinge_width, self.height, torque=sninge_torque)  # hinge
             self.edge(self.width - self.radius)
             self.corner(90, self.radius)
 
